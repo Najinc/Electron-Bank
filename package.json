@@ -1,0 +1,15 @@
+{
+  "name": "electron-bank",
+  "version": "1.0.0",
+  "description": "Logiciel de calcul simple d'intérêts",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron ."
+  },
+  "author": "Najib Chafei",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.2.1"
+  }
+}

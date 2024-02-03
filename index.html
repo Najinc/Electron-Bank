@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <title>Calcul d'Intérêts</title>
+</head>
+<body class="bg-gray-200 p-8">
+
+  <h1 class="text-3xl mb-6">Calcul d'Intérêts</h1>
+
+  <form id="interestForm" class="bg-white p-6 rounded-md shadow-md">
+    <label for="startDate" class="block text-sm font-medium text-gray-600">Date de Départ:</label>
+    <input type="date" id="startDate" class="mt-1 p-2 border rounded-md w-full" required>
+
+    <label for="quinzenes" class="block mt-4 text-sm font-medium text-gray-600">Nombre de Quinzaines:</label>
+    <input type="number" id="quinzenes" class="mt-1 p-2 border rounded-md w-full" required>
+
+    <label for="initialRate" class="block mt-4 text-sm font-medium text-gray-600">Taux Initial (%):</label>
+    <input type="number" id="initialRate" class="mt-1 p-2 border rounded-md w-full" required>
+
+    <label for="initialDeposit" class="block mt-4 text-sm font-medium text-gray-600">Dépôt Initial:</label>
+    <input type="number" id="initialDeposit" class="mt-1 p-2 border rounded-md w-full" required>
+
+    <button type="button" onclick="generateTable()" class="bg-blue-500 text-white py-2 px-4 rounded mt-4">Générer</button>   
+  </form>
+
+  <div id="tableContainer" class="mt-4">
+    
+  </div>
+
+  <script>
+    let currentAmount; 
+    let prevMontant;
+
+    function calculateMontantInteret(C, t, n) {
+        const I = (C * t * n) / 36000;
+        const Cn = C + I;
+        return Cn; 
+      }
+      
+      function generateTable() {
+        const startDate = document.getElementById('startDate').value;
+        const quinzenes = parseInt(document.getElementById('quinzenes').value);
+        const initialRate = parseFloat(document.getElementById('initialRate').value);
+        const initialDeposit = parseFloat(document.getElementById('initialDeposit').value);
+        const tableContainer = document.getElementById('tableContainer');
+      
+        currentAmount = initialDeposit;
+        prevMontant = currentAmount;
+      
+        const table = document.createElement('table');
+        table.classList.add('table-auto', 'mt-4', 'w-full');
+      
+        const thead = document.createElement('thead');
+        const headerRow = document.createElement('tr');
+        const headers = ['Numéro de Quinzaine', 'Date Logique', 'Montant Perçu', 'Taux'];
+        headers.forEach(headerText => {
+          const th = document.createElement('th');
+          th.textContent = headerText;
+          th.classList.add('w-1/4'); // Ajout de la classe de largeur ici
+          headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+        table.appendChild(thead);
+      
+        const tbody = document.createElement('tbody');
+        for (let i = 1; i <= quinzenes; i++) {
+          const tr = document.createElement('tr');
+      
+          const tdNumQuinzaine = document.createElement('td');
+          tdNumQuinzaine.textContent = i;
+          tdNumQuinzaine.classList.add('w-1/4'); // Ajout de la classe de largeur ici
+          tr.appendChild(tdNumQuinzaine);
+      
+          // Date Logique
+          const tdDateLogique = document.createElement('td');
+          const dateLogique = new Date(startDate);
+          dateLogique.setDate(dateLogique.getDate() + (i - 1) * 14);
+          tdDateLogique.textContent = dateLogique.toISOString().slice(0, 10);
+          tdDateLogique.classList.add('w-1/4'); // Ajout de la classe de largeur ici
+          tr.appendChild(tdDateLogique);
+      
+          // Montant Perçu
+          const tdMontant = document.createElement('td');
+          const inputMontant = document.createElement('input');
+          inputMontant.type = 'text';
+          inputMontant.classList.add('border', 'rounded-md', 'p-1', 'montant-input');
+          inputMontant.setAttribute('readonly', true);
+          tdMontant.appendChild(inputMontant);
+          tdMontant.classList.add('w-1/3'); 
+          tr.appendChild(tdMontant);
+      
+          const tdTaux = document.createElement('td');
+          const inputTaux = document.createElement('input');
+          inputTaux.type = 'number';
+          inputTaux.classList.add('border', 'rounded-md', 'p-1', 'taux-input');
+          inputTaux.value = initialRate;
+          tdTaux.appendChild(inputTaux);
+          tdTaux.classList.add('w-1/4'); 
+          tr.appendChild(tdTaux);
+      
+          const tdActions = document.createElement('td');
+          const updateButton = document.createElement('button');
+          updateButton.textContent = 'Mettre à Jour';
+          updateButton.classList.add('bg-blue-500', 'text-white', 'py-1', 'px-2', 'rounded', 'mt-1');
+          updateButton.addEventListener('click', () => updateTableFrom(i));
+          tdActions.appendChild(updateButton);
+          tdActions.classList.add('w-1'); 
+          tr.appendChild(tdActions);
+      
+          tbody.appendChild(tr);
+        }
+        table.appendChild(tbody);
+      
+        tableContainer.innerHTML = '';
+        tableContainer.appendChild(table);
+      
+        updateMontantInputs();
+      }
+      
+      function updateTableFrom(quinzaine) {
+        for (let i = quinzaine; i <= parseInt(document.getElementById('quinzenes').value); i++) {
+          const montantInput = document.querySelector(`.montant-input[value="${i}"]`);
+          const tauxInput = document.querySelector(`.taux-input[value="${i}"]`);
+      
+          const versement = 0;
+          const retrait = 0;
+          const taux = parseFloat(tauxInput.value);
+      
+          currentAmount += versement - retrait;
+      
+          const Cn = calculateMontantInteret(prevMontant, taux, i);
+          montantInput.value = Cn.toFixed(2);
+      
+          prevMontant = Cn;
+        }
+      }
+      
+      function updateMontantInputs() {
+        const montantInputs = document.querySelectorAll('.montant-input');
+        const tauxInputs = document.querySelectorAll('.taux-input');
+      
+        montantInputs.forEach((montantInput, index) => {
+          const taux = parseFloat(tauxInputs[index].value);
+          const Cn = calculateMontantInteret(prevMontant, taux, index + 1);
+          montantInput.value = Cn.toFixed(2);
+          prevMontant = Cn;
+        });
+      }
+  </script>
+</body>
+</html>
